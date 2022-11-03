@@ -191,6 +191,17 @@ Architectures
 
 * ARC
 
+  * Added support of non-multithreading mode for all UP ARC targets
+  * Added extra compile-time checks of :kconfig:option:`CONFIG_ISR_STACK_SIZE`
+    and :kconfig:option:`CONFIG_ARC_EXCEPTION_STACK_SIZE` value
+  * Added support of generation symbol file for ARC MWDT toolchain variant
+  * Added ARC MWDT toolchain version check
+  * Added support for GCC mcpu option tuning for ARC targets on SoC level
+  * Switched ARCv3 64bit targets for usage of new linker output format value
+  * Added ARCv3 64bit accumulator reg save / restore, cleanup it for ARCv3
+    32bit targets
+  * Fixed SMP race in ASM ARC interrupt handling code
+
 * ARM
 
   * Improved HardFault handling on Cortex-M.
@@ -222,6 +233,25 @@ Architectures
 * Posix
 
 * RISC-V
+
+  * Introduced support for RV32E.
+  * Reduced callee-saved registers for RV32E.
+  * Introduced Zicsr, Zifencei and BitManip as separate extensions.
+  * Introduced :kconfig:option:`CONFIG_ALWAYS_SWITCH_THROUGH_ECALL` for
+    plaforms that require every ``mret`` to be balanced by ``ecall``.
+  * IRQ vector table is now used for vectored mode.
+  * Disabled :kconfig:option:`CONFIG_IRQ_VECTOR_TABLE_JUMP_BY_CODE` for CLIC.
+  * ``STRINGIFY`` macro is now used for CSR helpers.
+  * :kconfig:option:`CONFIG_CODE_DATA_RELOCATION` is now supported.
+  * PLIC and CLIC are now decoupled.
+  * ``jedec,spi-nor`` is no longer required to be ``okay`` by the RISC-V arch
+    linker script.
+  * Removed usage of ``SOC_ERET``.
+  * Removed usage of ``ulong_t``.
+  * Added new TLS-based :c:func:`arch_is_user_context` implementation.
+  * Fixed PMP for builds with SMP enabled.
+  * Fixed the per-thread m-mode/u-mode entry array.
+  * :c:func:`semihost_exec` function is now aligned at 16-byte boundary.
 
 * x86
 
@@ -348,6 +378,16 @@ Boards & SoC Support
 * Made these changes in other SoC series:
 
   * gigadevice: Enable SEGGER RTT
+  * Raspberry Pi Pico: Added ADC support
+  * Raspberry Pi Pico: Added PWM support
+  * Raspberry Pi Pico: Added SPI support
+  * Raspberry Pi Pico: Added watchdog support
+
+* Changes for ARC boards:
+
+  * Added support for qemu_arc_hs5x board (ARCv3, 32bit, UP, HS5x)
+  * Simplified multi-runner setup for SMP nSIM ARC platforms
+  * Fixed mdb execution folder for mdb-based west runners (mdb-nsim and mdb-hw)
 
 * Added support for these ARM boards:
 
@@ -399,6 +439,7 @@ Boards & SoC Support
 
   * sam_e70_xplained: Uses EEPROM devicetree bindings for Ethernet MAC
   * sam_v71_xult: Uses EEPROM devicetree bindings for Ethernet MAC
+  * rpi_pico: Added west runner configurations for Picoprobe, Jlink and Blackmagicprobe
 
 * Added support for these following shields:
 
@@ -426,6 +467,11 @@ Drivers and Sensors
 
   * STM32: Now supports Vbat monitoring channel and STM32U5 series.
   * Added driver for GigaDevice GD32 SoCs
+  * Raspberry Pi Pico: Added ADC support for the Pico series.
+  * Added :c:struct:`adc_dt_spec` related helpers for sequence initialization,
+    setting up channels, and converting raw values to millivolts.
+  * Fixed :c:macro:`ADC_DT_SPEC_GET` and related macros to properly handle
+    channel identifiers >= 10.
 
 * Audio
 
@@ -449,24 +495,37 @@ Drivers and Sensors
 * Clock control
 
   * STM32: PLL_P, PLL_Q, PLL_R outputs can now be used as domain clock.
-  * Added driver for GigaDevice GD32 SoCs (peripheral clocks configuration only)
+  * Added driver for GigaDevice GD32 SoCs (peripheral clocks configuration only).
+  * Documented behavior when clock is not on.
 
 * Coredump
 
 * Counter
 
+  * Added :c:func:`counter_get_value_64` function.
   * STM32: RTC : Now supports STM32U5 and STM32F1 series.
   * STM32: Timer : Now supports STM32L4 series.
   * Added counter support using CTimer for NXP MIMXRT595.
-  * ESP32: Added support to Pulse Counter Mode (PCNT)
+  * ESP32: Added support to Pulse Counter Mode (PCNT) and RTC.
 
 * Crypto
+
+  * Added Intel ADSP sha driver.
+  * stm32: Check if clock device is ready before accessing clock control
+    devices.
+  * ataes132a: Convert to devicetree.
 
 * DAC
 
 * DAI
 
 * Display
+
+  * Renamed EPD controller driver GD7965 to UC81xx.
+  * Improved support for different controllers in ssd16xx and uc81xx drivers.
+  * Added basic read support for ssd16xx compatible EPD controllers.
+  * Revised intel_multibootfb driver
+  * Added MAX7219 display controller driver
 
 * Disk
 
@@ -488,7 +547,17 @@ Drivers and Sensors
 
 * Entropy
 
+  * Update drivers to use devicetree Kconfig symbol.
+  * gecko: Add driver using Secure Element module of EFR3.
+  * Added entropy driver for MCUX CAAM.
+  * stm32: Check if clock device is ready before accessing.
+
 * ESPI
+
+  * eSPI emulator initialization improvements.
+  * Nuvoton: Enabled platform specific Virtual Wire GPIO.
+  * Microchip: Added XEC (MEC152x) overcurrent platform-specific virtual wires.
+  * Nuvoton: Added driver flash channel operations support.
 
 * Ethernet
 
@@ -499,10 +568,20 @@ Drivers and Sensors
 
   * Atmel eefc: Fix support for Cortex-M4 variants.
   * Added flash driver for Renesas Smartbond platform
-  * STM32: Added OSPI NOR-flash driver. Supports STM32H7 and STM32U5. Supports DMA.
+  * Added support for STM32H7 and STM32U5 in the STM32 OSPI driver.
+  * Added DMA transfer support in the STM32 OSPI driver.
   * Added driver for GigaDevice GD32 SoCs
   * Added Flash support for NXP LPCXpresso55S36.
   * Added Flash support for NXP MIMXRT595 EVK.
+  * Added on-chip flash driver for TI CC13xx/CC26xx.
+  * Fixed flash to flash write for Telink B91.
+  * Fixed DMA priority configuration in the stm32 QSPI driver.
+  * Drivers are enabled by default based on their devicetree hardware declarations.
+  * Fixed write from unaligned source for STM32G0x.
+  * Added Flash support for Renesas Smartbond platform.
+  * Added Flash support for Cadence QSPI NOR FLASH.
+  * Fixed usage fault on nRF driver (along with BLE) due to possible incorrect handling of the ticker stop operation.
+
 
 * GPIO
 
@@ -527,6 +606,8 @@ Drivers and Sensors
   * Enable I2C support on NXP MIMXRT595 EVK.
 
 * I2S
+
+  * Removed the Intel S1000 I2S driver.
 
 * I3C
 
@@ -557,9 +638,17 @@ Drivers and Sensors
 
 * LED
 
-  * Updated LED PWM support for ESP32 boards
+  * Added support for using multiple instances of LP5562 LED module.
+  * Devicetree usage cleanups.
+  * i2c_dt_spec migration.
+  * Updated LED PWM support for ESP32 boards.
 
 * LoRa
+
+  * Added support for setting the sync-word and iq-inverted modes in LoRa modems.
+  * Removed ``REQUIRES_FULL_LIBC`` library dependency from LoRa drivers. This
+    results in considerable flash memory savings.
+  * Devicetree usage cleanups.
 
 * MBOX
 
@@ -598,8 +687,13 @@ Drivers and Sensors
 * PWM
 
   * Added PWM driver for Renesas R-Car platform
+  * Added PWM driver for Raspberry Pi Pico series
   * Added PWM support for NXP LPC55S36
   * Added MCPWM support for ESP32 boards
+  * Fixed the nRF PWM driver to properly handle cases where PWM generation is
+    used for some channels while some others are set to a constant level (active
+    or inactive), e.g. when the LED driver API is used to turn off a PWM driven
+    LED while another one (within the same PWM instance) is blinking.
 
 * Power Domain
 
@@ -653,6 +747,7 @@ Drivers and Sensors
 
   * Add interrupt-driven mode support for gd32 driver
   * Enable SPI support on NXP MIMXRT595 EVK.
+  * PL022: Added SPI driver for the PL022 peripheral.
 
 * Timer
 
@@ -662,6 +757,7 @@ Drivers and Sensors
 
   * Restructured the NXP MCUX USB driver.
   * Added USB support for NXP MXRT595.
+  * Fixed detach behavior in nRF USBD and Atmel SAM drivers
 
 * W1
 
@@ -774,12 +870,458 @@ Networking
 USB
 ***
 
+  * Minor bug fixes and improvements in class implementations CDC ACM, DFU, and MSC.
+    Otherwise no significant changes.
+
 Devicetree
 **********
 
-* API
+* Use of the devicetree *label property* has been deprecated, and the property
+  has been made optional in almost all bindings throughout the tree.
+
+  In previous versions of zephyr, label properties like this commonly appeared
+  in devicetree files:
+
+  .. code-block:: dts
+
+     foo {
+             label = "FOO";
+             /* ... */
+     };
+
+  You could then use something like the following to retrieve a device
+  structure for use in the :ref:`device_model_api`:
+
+  .. code-block:: c
+
+     const struct device *my_dev = device_get_binding("FOO");
+     if (my_dev == NULL) {
+             /* either device initialization failed, or no such device */
+     } else {
+             /* device is ready for use */
+     }
+
+  This approach has multiple problems.
+
+  First, it incurs a runtime string comparison over all devices in the system
+  to look up each device, which is inefficient since devices are statically
+  allocated and known at build time. Second, missing devices due to
+  misconfigured device drivers could not easily be distinguished from device
+  initialization failures, since both produced ``NULL`` return values from
+  ``device_get_binding()``. This led to frequent confusion. Third, the
+  distinction between the label property and devicetree *node labels* -- which
+  are different despite the similar terms -- was a frequent source of user
+  confusion, especially since either one can be used to retrieve device
+  structures.
+
+  Instead of using label properties, you should now generally be using node
+  labels to retrieve devices instead. Node labels look like the ``lbl`` token
+  in the following devicetree:
+
+  .. code-block:: dts
+
+     lbl: foo {
+             /* ... */
+     };
+
+  and you can retrieve the device structure pointer like this:
+
+  .. code-block:: c
+
+     /* If the next line causes a build error, then there
+      * is no such device. Either fix your devicetree or make sure your
+      * device driver is allocating a device. */
+     const struct device *my_dev = DEVICE_DT_GET(DT_NODELABEL(lbl));
+
+     if (!device_is_ready(my_dev)) {
+             /* device exists, but it failed to initialize */
+     } else {
+             /* device is ready for use */
+     }
+
+  As shown in the above snippet, :c:macro:`DEVICE_DT_GET` should generally be
+  used instead of ``device_get_binding()`` when getting device structures from
+  devicetree nodes. Note that you can pass ``DEVICE_DT_GET`` any devicetree
+  :ref:`node identifier <dt-node-identifiers>` -- you don't have to use
+  :c:macro:`DT_NODELABEL`, though it is usually convenient to do so.
+
+* Support for devicetree "fixups" was removed. For more details, see `commit
+  b2520b09a7
+  <https://github.com/zephyrproject-rtos/zephyr/commit/b2520b09a78b86b982a659805e0c65b34e3112a5>`_
+
+* :ref:`devicetree_api`
+
+  * All devicetree macros now recursively expand their arguments. This means
+    that in the following example, ``INDEX`` is always replaced with the number
+    ``3`` for any hypothetical devicetree macro ``DT_FOO()``:
+
+    .. code-block:: c
+
+       #define INDEX 3
+       int foo = DT_FOO(..., INDEX)
+
+    Previously, devicetree macro arguments were expanded or not on a
+    case-by-case basis. The current behavior ensures you can always rely on
+    macro expansion when using devicetree APIs.
+
+  * New API macros:
+
+     * :c:macro:`DT_FIXED_PARTITION_EXISTS`
+     * :c:macro:`DT_FOREACH_CHILD_SEP_VARGS`
+     * :c:macro:`DT_FOREACH_CHILD_SEP`
+     * :c:macro:`DT_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS`
+     * :c:macro:`DT_FOREACH_CHILD_STATUS_OKAY_SEP`
+     * :c:macro:`DT_FOREACH_NODE`
+     * :c:macro:`DT_FOREACH_STATUS_OKAY_NODE`
+     * :c:macro:`DT_INST_CHILD`
+     * :c:macro:`DT_INST_FOREACH_CHILD_SEP_VARGS`
+     * :c:macro:`DT_INST_FOREACH_CHILD_SEP`
+     * :c:macro:`DT_INST_FOREACH_CHILD_STATUS_OKAY_SEP_VARGS`
+     * :c:macro:`DT_INST_FOREACH_CHILD_STATUS_OKAY_SEP`
+     * :c:macro:`DT_INST_FOREACH_CHILD_STATUS_OKAY_VARGS`
+     * :c:macro:`DT_INST_FOREACH_CHILD_STATUS_OKAY`
+     * :c:macro:`DT_INST_STRING_TOKEN_BY_IDX`
+     * :c:macro:`DT_INST_STRING_TOKEN`
+     * :c:macro:`DT_INST_STRING_UPPER_TOKEN_BY_IDX`
+     * :c:macro:`DT_INST_STRING_UPPER_TOKEN_OR`
+     * :c:macro:`DT_INST_STRING_UPPER_TOKEN`
+     * :c:macro:`DT_NODE_VENDOR_BY_IDX_OR`
+     * :c:macro:`DT_NODE_VENDOR_BY_IDX`
+     * :c:macro:`DT_NODE_VENDOR_HAS_IDX`
+     * :c:macro:`DT_NODE_VENDOR_OR`
+     * :c:macro:`DT_STRING_TOKEN_BY_IDX`
+     * :c:macro:`DT_STRING_UPPER_TOKEN_BY_IDX`
+     * :c:macro:`DT_STRING_UPPER_TOKEN_OR`
+
+  * Deprecated macros:
+
+     * ``DT_LABEL(node_id)``: use ``DT_PROP(node_id, label)`` instead. This is
+       part of the general deprecation of the label property described at the
+       top of this section.
+     * ``DT_INST_LABEL(inst)``: use ``DT_INST_PROP(inst, label)`` instead
+     * ``DT_BUS_LABEL(node_id)``: use ``DT_PROP(DT_BUS(node_id), label))`` instead
+     * ``DT_INST_BUS_LABEL(node_id)``: use ```DT_PROP(DT_INST_BUS(inst),
+       label)`` instead. Similar advice applies for the rest of the following
+       deprecated macros: if you need to access a devicetree node's label
+       property, do so explicitly using another property access API macro.
+     * ``DT_GPIO_LABEL_BY_IDX()``
+     * ``DT_GPIO_LABEL()``
+     * ``DT_INST_GPIO_LABEL_BY_IDX()``
+     * ``DT_INST_GPIO_LABEL()``
+     * ``DT_SPI_DEV_CS_GPIOS_LABEL()``
+     * ``DT_INST_SPI_DEV_CS_GPIOS_LABEL()``
+     * ``DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL``
 
 * Bindings
+
+  * The :ref:`bus <dt-bindings-bus>` key in a bindings file can now be a list
+    of strings as well as a string. This allows a single node to declare that
+    it represents hardware which can communicate over multiple bus protocols.
+    The primary use case is simultaneous support for I3C and I2C buses in the
+    same nodes, with the base bus definition provided in
+    :zephyr_file:`dts/bindings/i3c/i3c-controller.yaml`.
+
+  * New:
+
+    * :dtcompatible:`adi,adxl345`
+    * :dtcompatible:`altr,nios2-qspi-nor`
+    * :dtcompatible:`altr,nios2-qspi`
+    * :dtcompatible:`andestech,atciic100`
+    * :dtcompatible:`andestech,atcpit100`
+    * :dtcompatible:`andestech,machine-timer`
+    * :dtcompatible:`andestech,atcspi200`
+    * :dtcompatible:`arduino-mkr-header`
+    * :dtcompatible:`arm,armv6m-systick`
+    * :dtcompatible:`arm,armv7m-itm`
+    * :dtcompatible:`arm,armv7m-systick`
+    * :dtcompatible:`arm,armv8.1m-systick`
+    * :dtcompatible:`arm,armv8m-itm`
+    * :dtcompatible:`arm,armv8m-systick`
+    * :dtcompatible:`arm,beetle-syscon`
+    * :dtcompatible:`arm,itm`
+    * :dtcompatible:`arm,pl022`
+    * :dtcompatible:`aspeed,ast10x0-clock`
+    * :dtcompatible:`atmel,24mac402`
+    * :dtcompatible:`atmel,ataes132a`
+    * :dtcompatible:`atmel,sam-smc`
+    * :dtcompatible:`atmel,sam4l-flashcalw-controller`
+    * :dtcompatible:`atmel,saml2x-gclk`
+    * :dtcompatible:`atmel,saml2x-mclk`
+    * :dtcompatible:`cdns,qspi-nor`
+    * :dtcompatible:`espressif,esp32-ipm`
+    * :dtcompatible:`espressif,esp32-mcpwm`
+    * :dtcompatible:`espressif,esp32-pcnt`
+    * :dtcompatible:`espressif,esp32-rtc-timer`
+    * :dtcompatible:`espressif,esp32-timer`
+    * :dtcompatible:`espressif,esp32-twai`
+    * :dtcompatible:`espressif,esp32-usb-serial`
+    * :dtcompatible:`espressif,esp32-wifi`
+    * :dtcompatible:`gd,gd32-adac`
+    * :dtcompatible:`gd,gd32-cctl`
+    * :dtcompatible:`gd,gd32-dma`
+    * :dtcompatible:`gd,gd32-flash-controller`
+    * :dtcompatible:`gd,gd32-rcu`
+    * :dtcompatible:`goodix,gt911`
+    * :dtcompatible:`infineon,xmc4xxx-gpio`
+    * :dtcompatible:`infineon,xmc4xxx-pinctrl`
+    * :dtcompatible:`intel,ace-art-counter`
+    * :dtcompatible:`intel,ace-intc`
+    * :dtcompatible:`intel,ace-rtc-counter`
+    * :dtcompatible:`intel,ace-timestamp`
+    * :dtcompatible:`intel,adsp-gpdma` (formerly ``intel,cavs-gpdma``)
+    * :dtcompatible:`intel,adsp-hda-host-in` (formerly ``intel,cavs-hda-host-in``)
+    * :dtcompatible:`intel,adsp-hda-host-out` (formerly ``intel,cavs-hda-host-out``)
+    * :dtcompatible:`intel,adsp-hda-link-in` (formerly ``intel,cavs-hda-link-in``)
+    * :dtcompatible:`intel,adsp-hda-link-out` (formerly ``intel,cavs-hda-link-out``)
+    * :dtcompatible:`intel,adsp-host-ipc`
+    * :dtcompatible:`intel,adsp-idc` (formerly ``intel,cavs-idc``)
+    * :dtcompatible:`intel,adsp-imr`
+    * :dtcompatible:`intel,adsp-lps`
+    * :dtcompatible:`intel,adsp-mtl-tlb`
+    * :dtcompatible:`intel,adsp-power-domain`
+    * :dtcompatible:`intel,adsp-shim-clkctl`
+    * :dtcompatible:`intel,agilex-clock`
+    * :dtcompatible:`intel,alh-dai`
+    * :dtcompatible:`intel,multiboot-framebuffer`
+    * :dtcompatible:`ite,it8xxx2-peci` (formerly ``ite,peci-it8xxx2``)
+    * :dtcompatible:`maxim,ds18b20`
+    * :dtcompatible:`maxim,ds2484`
+    * :dtcompatible:`maxim,ds2485`
+    * :dtcompatible:`maxim,max7219`
+    * :dtcompatible:`microchip,mpfs-gpio`
+    * :dtcompatible:`microchip,xec-eeprom`
+    * :dtcompatible:`microchip,xec-espi`
+    * :dtcompatible:`microchip,xec-i2c`
+    * :dtcompatible:`microchip,xec-qmspi`
+    * :dtcompatible:`neorv32-machine-timer`
+    * :dtcompatible:`nordic,nrf-ieee802154`
+    * :dtcompatible:`nuclei,systimer`
+    * :dtcompatible:`nuvoton,npcx-leakage-io`
+    * :dtcompatible:`nuvoton,npcx-peci`
+    * :dtcompatible:`nuvoton,npcx-power-psl`
+    * :dtcompatible:`nxp,gpt-hw-timer`
+    * :dtcompatible:`nxp,iap-fmc11`
+    * :dtcompatible:`nxp,imx-caam`
+    * :dtcompatible:`nxp,kw41z-ieee802154`
+    * :dtcompatible:`nxp,lpc-rtc`
+    * :dtcompatible:`nxp,lpc-sdif`
+    * :dtcompatible:`nxp,mcux-i3c`
+    * :dtcompatible:`nxp,os-timer`
+    * :dtcompatible:`panasonic,reduced-arduino-header`
+    * :dtcompatible:`raspberrypi,pico-adc`
+    * :dtcompatible:`raspberrypi,pico-pwm`
+    * :dtcompatible:`raspberrypi,pico-spi`
+    * :dtcompatible:`raspberrypi,pico-watchdog`
+    * :dtcompatible:`renesas,pwm-rcar`
+    * :dtcompatible:`renesas,r8a7795-cpg-mssr` (formerly ``renesas,rcar-cpg-mssr``)
+    * :dtcompatible:`renesas,smartbond-flash-controller`
+    * :dtcompatible:`renesas,smartbond-gpio`
+    * :dtcompatible:`renesas,smartbond-pinctrl`
+    * :dtcompatible:`renesas,smartbond-uart`
+    * :dtcompatible:`sifive,clint0`
+    * :dtcompatible:`sifive,e24.yaml` (formerly ``riscv,sifive-e24``)
+    * :dtcompatible:`sifive,e31.yaml` (formerly ``riscv,sifive-e31``)
+    * :dtcompatible:`sifive,e51.yaml` (formerly ``riscv,sifive-e51``)
+    * :dtcompatible:`sifive,s7` (formerly ``riscv,sifive-s7``)
+    * :dtcompatible:`silabs,gecko-semailbox`
+    * :dtcompatible:`snps,arc-iot-sysconf`
+    * :dtcompatible:`snps,arc-timer`
+    * :dtcompatible:`snps,archs-ici`
+    * :dtcompatible:`st,stm32-vbat`
+    * :dtcompatible:`st,stm32g0-hsi-clock`
+    * :dtcompatible:`st,stm32h7-spi`
+    * :dtcompatible:`st,stm32u5-dma`
+    * :dtcompatible:`starfive,jh7100-clint`
+    * :dtcompatible:`telink,b91-adc`
+    * :dtcompatible:`telink,machine-timer`
+    * :dtcompatible:`ti,ads1119`
+    * :dtcompatible:`ti,cc13xx-cc26xx-flash-controller`
+    * :dtcompatible:`ti,cc13xx-cc26xx-ieee802154-subghz`
+    * :dtcompatible:`ti,cc13xx-cc26xx-ieee802154`
+    * :dtcompatible:`ti,sn74hc595`
+    * :dtcompatible:`ultrachip,uc8176`
+    * :dtcompatible:`ultrachip,uc8179`
+    * :dtcompatible:`xen,hvc-uart`
+    * :dtcompatible:`xen,xen-4.15`
+    * :dtcompatible:`xlnx,pinctrl-zynq`
+    * :dtcompatible:`zephyr,coredump`
+    * :dtcompatible:`zephyr,ieee802154-uart-pipe`
+    * :dtcompatible:`zephyr,native-posix-counter`
+    * :dtcompatible:`zephyr,native-posix-linux-can`
+    * :dtcompatible:`zephyr,sdl-kscan`
+    * :dtcompatible:`zephyr,sdmmc-disk`
+    * :dtcompatible:`zephyr,w1-serial`
+
+  * :ref:`pinctrl-guide` support added via new ``pinctrl-0``, etc. properties:
+
+    * :dtcompatible:`microchip,xec-qmspi`
+    * :dtcompatible:`infineon,xmc4xxx-uart`
+    * :dtcompatible:`nxp,lpc-mcan`
+    * :dtcompatible:`xlnx,xuartps`
+
+  * Other changes:
+
+    * Analog Devices parts:
+
+      * :dtcompatible:`adi,adxl372`: new properties as part of a general conversion
+        of the associated upstream driver to support multiple instances
+      * :dtcompatible:`adi,adxl362`: new ``wakeup-mode``, ``autosleep`` properties
+
+    * Atmel SoCs:
+
+      * :dtcompatible:`atmel,rf2xx`: new ``channel-page``, ``tx-pwr-table``,
+        ``tx-pwr-min``, ``tx-pwr-max`` properties
+      * GMAC: new ``mac-eeprom`` property
+
+    * Espressif SoCs:
+
+      * :dtcompatible:`espressif,esp32-i2c`: the ``sda-pin`` and ``scl-pin``
+        properties are now ``scl-gpios`` and ``sda-gpios``
+      * :dtcompatible:`espressif,esp32-ledc`: device configuration moved to
+        devicetree via a new child binding
+      * :dtcompatible:`espressif,esp32-pinctrl`: this now uses pin groups
+      * :dtcompatible:`espressif,esp32-spi`: new ``use-iomux`` property
+      * :dtcompatible:`espressif,esp32-usb-serial`: removed ``peripheral``
+        property
+
+    * GigaDevice SoCs:
+
+      * Various peripheral bindings have had their SoC-specific
+        ``rcu-periph-clock`` properties replaced with the standard ``clocks``
+        property as part of driver changes associated with the new
+        :dtcompatible:`gd,gd32-cctl` clock controller binding:
+
+        * :dtcompatible:`gd,gd32-afio`
+        * :dtcompatible:`gd,gd32-dac`
+        * :dtcompatible:`gd,gd32-gpio`
+        * :dtcompatible:`gd,gd32-i2c`
+        * :dtcompatible:`gd,gd32-pwm`
+        * :dtcompatible:`gd,gd32-spi`
+        * :dtcompatible:`gd,gd32-syscfg`
+        * :dtcompatible:`gd,gd32-timer`
+        * :dtcompatible:`gd,gd32-usart`
+
+      * Similarly, various GigaDevice peripherals now support the standard
+        ``resets`` property as part of related driver changes to support
+        resetting the peripheral state before initialization via the
+        :dtcompatible:`gd,gd32-rcu` binding:
+
+        * :dtcompatible:`gd,gd32-dac`
+        * :dtcompatible:`gd,gd32-gpio`
+        * :dtcompatible:`gd,gd32-i2c`
+        * :dtcompatible:`gd,gd32-pwm`
+        * :dtcompatible:`gd,gd32-spi`
+        * :dtcompatible:`gd,gd32-usart`
+
+    * Intel SoCs:
+
+      * :dtcompatible:`intel,adsp-tlb`:
+        new ``paddr-size``, ``exec-bit-idx``, ``write-bit-idx`` properties
+      * :dtcompatible:`intel,cavs-shim-clkctl`: new ``wovcro-supported`` property
+      * Removed ``intel,dmic`` binding
+      * Removed ``intel,s1000-pinmux`` binding
+
+    * Nordic SoCs:
+
+      * :dtcompatible:`nordic,nrf-pinctrl`: ``NRF_PSEL_DISCONNECTED`` can be used
+        to disconnect a pin
+      * :dtcompatible:`nordic,nrf-spim`: new ``rx-delay-supported``,
+        ``rx-delay`` properties
+      * :dtcompatible:`nordic,nrf-spim`, :dtcompatible:`nordic,nrf-spi`: new
+         ``overrun-character``, ``max-frequency``, ``memory-region``,
+         ``memory-region-names`` properties
+      * :dtcompatible:`nordic,nrf-uarte`: new ``memory-region``,
+        ``memory-region-names`` properties
+      * Various bindings have had ``foo-pin`` properties deprecated. For
+        example, :dtcompatible:`nordic,nrf-qspi` has a deprecated ``sck-pin``
+        property. Uses of such properties should be replaced with pinctrl
+        equivalents; see :dtcompatible:`nordic,nrfpinctrl`.
+
+    * Nuvoton SoCs:
+
+      * :dtcompatible:`nuvoton,npcx-leakage-io`: new ``lvol-maps`` property
+      * :dtcompatible:`nuvoton,npcx-scfg`: removed ``io_port``, ``io_bit``
+        cells in ``lvol_cells`` specifiers
+      * Removed: ``nuvoton,npcx-lvolctrl-def``, ``nuvoton,npcx-psl-out``,
+        ``nuvoton,npcx-pslctrl-conf``, ``nuvoton,npcx-pslctrl-def``
+      * Added pinctrl support for PSL (Power Switch Logic) pads
+
+    * NXP SoCs:
+
+      * :dtcompatible:`nxp,imx-pwm`: new ``run-in-wait``, ``run-in-debug`` properties
+      * :dtcompatible:`nxp,lpc-spi`: new ``def-char`` property
+      * :dtcompatible:`nxp,lpc-iocon-pinctrl`: new ``nxp,analog-alt-mode`` property
+      * removed deprecated ``nxp,lpc-iap`` binding
+      * :dtcompatible:`nxp,imx-csi`: new ``sensor`` property replacing the
+        ``sensor-label`` property
+      * :dtcompatible:`nxp,imx-lpi2c`: new ``scl-gpios``, ``sda-gpios`` properties
+
+    * STM32 SoCs:
+
+      * :dtcompatible:`st,stm32-adc`: new ``has-vbat-channel`` property
+      * :dtcompatible:`st,stm32-can`: removed ``one-shot`` property
+      * :dtcompatible:`st,stm32-fdcan`: new ``clocks``, ``clk-divider`` properties
+      * :dtcompatible:`st,stm32-ospi`: new ``dmas``, ``dma-names`` properties
+      * :dtcompatible:`st,stm32-ospi-nor`: new ``four-byte-opcodes``,
+        ``writeoc`` properties; new enum values ``2`` and ``4`` in
+        ``spi-bus-width`` property
+      * :dtcompatible:`st,stm32-pwm`: removed deprecated ``st,prescaler`` property
+      * :dtcompatible:`st,stm32-rng`: new ``nist-config`` property
+      * :dtcompatible:`st,stm32-sdmmc`: new ``dmas``, ``dma-names``,
+        ``bus-width`` properties
+      * :dtcompatible:`st,stm32-temp-cal`: new ``ts-cal-resolution`` property;
+        removed ``ts-cal-offset`` property
+      * :dtcompatible:`st,stm32u5-pll-clock`: new ``div-p`` property
+      * temperature sensor bindings no longer have a ``ts-voltage-mv`` property
+      * UART bindings: new ``wakeup-line`` properties
+
+    * Texas Instruments parts:
+
+      * :dtcompatible:`ti,ina237`: new ``alert-config``, ``irq-gpios`` properties
+      * :dtcompatible:`ti,bq274xx`: new ``zephyr,lazy-load`` property
+
+    * Ultrachip UC81xx displays:
+
+      * The ``gooddisplay,gd7965`` binding was removed in favor of new
+        UltraChip device-specific bindings (see list of new ``ultrachip,...``
+        bindings above). Various required properties in the removed binding are
+        now optional in the new bindings.
+
+      * New ``pll``, ``vdcs``, ``lutc``, ``lutww``, ``lutkw``, ``lutwk``,
+        ``lutkk``, ``lutbd``, ``softstart`` properties. Full and partial
+        refresh profile support. The ``pwr`` property is now part of the child
+        binding.
+
+    * Zephyr-specific bindings:
+
+      * :dtcompatible:`zephyr,bt-hci-spi`: new ``reset-assert-duration-ms`` property
+      * removed ``zephyr,ipm-console`` binding
+      * :dtcompatible:`zephyr,ipc-openamp-static-vrings`: new
+        ``zephyr,buffer-size`` property
+      * :dtcompatible:`zephyr,memory-region`: new ``PPB`` and ``IO`` region support
+
+    * :dtcompatible:`infineon,xmc4xxx-uart`: new ``input-src`` property
+    * WSEN-HIDS sensors: new ``drdy-gpios``, ``odr`` properties
+    * :dtcompatible:`sitronix,st7789v`: ``cmd-data-gpios`` is now optional
+    * :dtcompatible:`solomon,ssd16xxfb`: new ``dummy-line``,
+      ``gate-line-width`` properties. The ``gdv``, ``sdv``, ``vcom``, and
+      ``border-waveform`` properties are now optional.
+    * ``riscv,clint0`` removed; all in-tree users were converted to
+      ``sifive,clint0`` or derived bindings
+    * :dtcompatible:`worldsemi,ws2812`: SPI bindings have new ``spi-cpol``,
+      ``spi-cpha`` properties
+    * :dtcompatible:`ns16550`: ``reg-shift`` is now required
+    * Removed ``reserved-memory`` binding
+
+* Implementation details
+
+  * The generated devicetree header file placed in the build directory was
+    renamed from ``devicetree_unfixed.h`` to ``devicetree_generated.h``
+
+  * The generated ``device_extern.h`` has been replaced using
+    ``DT_FOREACH_STATUS_OKAY_NODE``. See `commit
+    0224f2c508df154ffc9c1ecffaf0b06608d6b623
+    <https://github.com/zephyrproject-rtos/zephyr/commit/0224f2c508df154ffc9c1ecffaf0b06608d6b623>`_
 
 Libraries / Subsystems
 **********************
@@ -808,9 +1350,25 @@ Libraries / Subsystems
   * Renamed global constructor list symbols to prevent the native POSIX host
     runtime from executing the constructors before Zephyr loads.
 
+* Cbprintf
+
+  * Updated cbprintf static packaging to interpret ``unsigned char *`` as a pointer
+    to a string. See :ref:`cbprintf_packaging_limitations` for more details about
+    how to efficienty use strings. Change mainly applies to the ``logging`` subsystem
+    since it uses this feature.
+
 * Emul
 
+  * Added :c:macro:`EMUL_DT_DEFINE` and :c:macro:`EMUL_DT_INST_DEFINE` to mirror
+    :c:macro:`DEVICE_DT_DEFINE` and :c:macro:`DEVICE_DT_INST_DEFINE` respectively.
+  * Added :c:macro:`EMUL_DT_GET` to mirror :c:macro:`DEVICE_DT_GET`.
+  * Removed the need to manually register emulators in their init function (automatically done).
+
 * Filesystem
+
+  * Added cash used to reduce the NVS data lookup time, see
+    :kconfig:option:`CONFIG_NVS_LOOKUP_CACHE` option.
+  * Changing mkfs options to create FAT32 on larger storage when FAT16 fails.
 
 * IPC
 
@@ -835,7 +1393,7 @@ Libraries / Subsystems
   * MCUMGR taskstat runtime field support has been added, if
     :kconfig:option:`CONFIG_OS_MGMT_TASKSTAT` is enabled, which will report the
     number of CPU cycles have been spent executing the thread.
-  * MCUMgr transport API drops ``zst`` parameter, of :c:struct:`zephyr_smp_transport`
+  * MCUMGR transport API drops ``zst`` parameter, of :c:struct:`zephyr_smp_transport`
     type, from :c:func:`zephyr_smp_transport_out_fn` type callback as it has
     not been used, and the ``nb`` parameter, of :c:struct:`net_buf` type,
     can carry additional transport information when needed.
@@ -857,15 +1415,30 @@ Libraries / Subsystems
     structs for storage.
   * Levels of function redirection which were previously used to support multiple
     OS's have been reduced to simplify code and reduce output size.
+  * Bluetooth SMP debug output format specifier has been fixed to avoid a build
+    warning on native_posix platforms.
+  * Issue with :c:func:`img_mgmt_dfu_stopped` being wrongly called on success
+    has been fixed.
+  * Issue with MCUMGR img_mgmt image erase wrongly returning success during an
+    error condition has been fixed.
+  * Unused MCUMGR header files such as mcumgr_util.h have been removed.
+  * Verbose error response reporting has been fixed and is now present when
+    enabled.
+  * Internal SMP functions have been removed from the public smp.h header file
+    and moved to smp_internal.h
+  * Kconfig files have been split up and moved to directories containing the
+    systems they influence.
+  * MCUMGR img_mgmt image upload over-riding/hiding of result codes has been
+    fixed.
 
-* Cbprintf and logging
+* Logging
 
-  * Updated cbprintf static packaging to interpret ``unsigned char *`` as a pointer
-    to a string. See :ref:`cbprintf_packaging_limitations` for more details about
-    how to efficienty use strings. Change mainly applies to the ``logging`` subsystem
-    since it uses this feature.
+  * Removed legacy (v1) implementation and removed any references to the logging
+    v2.
   * Added :c:macro:`LOG_RAW` for logging strings without additional formatting.
     It is similar to :c:macro:`LOG_PRINTK` but do not append ``<cr>`` when new line is found.
+  * Improvements in the ADSP backend.
+  * File system backend: Only delete old files if necessary.
 
 * IPC
 
@@ -880,9 +1453,21 @@ Libraries / Subsystems
 
 * LoRaWAN
 
+  * Added Class-C support.
+  * Upgraded the loramac-node repository to v4.6.0.
+  * Moved the ``REQUIRES_FULL_LIBC`` library dependency from LoRa to LoRaWAN.
+  * Fixed the async reception in SX127x modems.
+
 * Modbus
 
+  * Added user data entry for ADU callback
+
 * Power management
+
+  * Allow multiple subscribers to latency changes in the policy manager.
+  * Added new API to implement suspend-to-RAM (S2RAM). Select
+    :kconfig:option:`CONFIG_PM_S2RAM` to enable this feature.
+  * Added :c:func:`pm_device_is_powered` to query a device power state.
 
 * POSIX
 
@@ -910,11 +1495,25 @@ Libraries / Subsystems
 
 * Settings
 
+  * Added API function :c:func:`settings_storage_get` which allows to get
+    the storage instance used by the settings backed to store its records.
+
 * Shell
 
 * Storage
 
 * Testsuite
+
+  * Added Kconfig support to ``unit_testing`` platform.
+  * Migrate tests to use :kconfig:option:`CONFIG_ZTEST_NEW_API`
+  * Add ztest options for shuffling tests/suites via:
+
+    * :kconfig:option:`CONFIG_ZTEST_SHUFFLE`
+    * :kconfig:option:`CONFIG_ZTEST_SHUFFLE_SUITE_REPEAT_COUNT`
+    * :kconfig:option:`CONFIG_ZTEST_SHUFFLE_TEST_REPEAT_COUNT`
+
+  * Add ztest native_posix command line arguments for running specific tests/suites using
+    ``--test suite_name:*`` or ``--test suite_name::test_name`` command line arguments.
 
 * Tracing
 
@@ -946,7 +1545,11 @@ HALs
 
 * Nordic
 
+  * Updated nrfx to version 2.9.0
+
 * RPi Pico
+
+  * Renamed ``adc_read`` to ``pico_adc_read``, to avoid name collision with Zephyr's API
 
 * Renesas
 
@@ -981,6 +1584,31 @@ HALs
 MCUboot
 *******
 
+* Added initial support for leveraging the RAM-LOAD mode with the zephyr-rtos port.
+* Added the MCUboot status callback support.
+  See :kconfig:option:`CONFIG_MCUBOOT_ACTION_HOOKS`.
+* Edited includes to have the ``zephyr/`` prefix.
+* Edited the DFU detection's GPIO-pin configuration to be done through DTS using the ``mcuboot-button0`` pin alias.
+* Edited the LED usage to prefer DTS' ``mcuboot-led0`` alias over the ``bootloader-led0`` alias.
+* Removed :c:func:`device_get_binding()` usage in favor of :c:func:`DEVICE_DT_GET()`.
+* Added support for generic `watchdog0` alias.
+* Enabled watchdog feed by default.
+* Dropped the :kconfig:option:`CONFIG_BOOT_IMAGE_ACCESS_HOOKS_FILE` option.
+  The inclusion of the Hooks implementation file is now up to the project's customization.
+* Switched zephyr port from using ``FLASH_AREA_`` macros to ``FIXED_PARTITION_`` macros.
+* Made flash_map_backend.h compatible with a C++ compiler
+* Allowed to get the flash write alignment based on the ``zephyr,flash`` DT chosen node property
+
+* boot_serial:
+
+  * Upgraded from cddl-gen v0.1.0 to zcbor v0.4.0.
+  * Refactored and optimized the code, mainly in what affects the progressive erase implementation.
+  * Fixed a compilation issue with the echo command code.
+
+* imgtool:
+
+  * Added support for providing a signature through a third party.
+
 Trusted Firmware-M
 ******************
 
@@ -998,6 +1626,8 @@ Tests and Samples
 * A large number of tests have been reworked to use the new ztest API, see
   :ref:`test-framework` for more details. This should be used for newly
   introduce tests as well.
+* smp_svr Bluetooth overlay (overlay-bt) has been reworked to increase
+  throughput and enable packet reassembly.
 
 Issue Related Items
 *******************
