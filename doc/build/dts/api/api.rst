@@ -12,6 +12,9 @@ before they can be used; these are discussed individually below. These macros
 are generally meant for use within :ref:`device drivers <device_model_api>`,
 though they can be used outside of drivers with appropriate care.
 
+.. contents:: Contents
+   :local:
+
 .. _devicetree-generic-apis:
 
 Generic APIs
@@ -185,8 +188,8 @@ implements support for. Here is an example devicetree fragment:
            current-speed = <115200>;
    };
 
-Example usage, assuming serial@40001000 is the only enabled node
-with compatible "vnd,serial":
+Example usage, assuming ``serial@40001000`` is the only enabled node
+with compatible ``vnd,serial``:
 
 .. code-block:: c
 
@@ -400,6 +403,8 @@ device.
      - Sets UART device used by console driver
    * - zephyr,display
      - Sets the default display controller
+   * - zephyr,keyboard-scan
+     - Sets the default keyboard scan controller
    * - zephyr,dtcm
      - Data Tightly Coupled Memory node on some Arm SoCs
    * - zephyr,entropy
@@ -412,6 +417,8 @@ device.
        the ``zephyr,flash`` node
    * - zephyr,gdbstub-uart
      - Sets UART device used by the :ref:`gdbstub` subsystem
+   * - zephyr,ieee802154
+     - Used by the networking subsystem to set the IEEE 802.15.4 device
    * - zephyr,ipc
      - Used by the OpenAMP subsystem to specify the inter-process communication
        (IPC) device
