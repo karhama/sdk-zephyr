@@ -14,6 +14,7 @@
 #include <string.h>
 #include <zephyr/logging/log.h>
 #include "gpio_utils.h"
+LOG_MODULE_REGISTER(gpio_it8xxx2, LOG_LEVEL_ERR);
 
 #define DT_DRV_COMPAT ite_it8xxx2_gpio
 
@@ -366,6 +367,26 @@ static int gpio_ite_configure(const struct device *dev,
 		return -ENOTSUP;
 	}
 
+	if (flags == GPIO_DISCONNECTED) {
+		*reg_gpcr = GPCR_PORT_PIN_MODE_TRISTATE;
+		/*
+		 * Since not all GPIOs can be to configured as tri-state,
+		 * prompt error if pin doesn't support the flag.
+		 */
+		if (*reg_gpcr != GPCR_PORT_PIN_MODE_TRISTATE) {
+			/* Go back to default setting (input) */
+			*reg_gpcr = GPCR_PORT_PIN_MODE_INPUT;
+			LOG_ERR("Cannot config GPIO-%c%d as tri-state",
+				(gpio_config->index + 'A'), pin);
+			return -ENOTSUP;
+		}
+		/*
+		 * The following configuration isn't necessary because the pin
+		 * was configured as disconnected.
+		 */
+		return 0;
+	}
+
 	/*
 	 * Select open drain first, so that we don't glitch the signal
 	 * when changing the line to an output.
@@ -684,8 +705,8 @@ static int gpio_it8xxx2_init_set(const struct device *arg)
 	ARG_UNUSED(arg);
 
 	if (IS_ENABLED(CONFIG_SOC_IT8XXX2_GPIO_GROUP_K_L_DEFAULT_PULL_DOWN)) {
-		const struct device *gpiok = DEVICE_DT_GET(DT_NODELABEL(gpiok));
-		const struct device *gpiol = DEVICE_DT_GET(DT_NODELABEL(gpiol));
+		const struct device *const gpiok = DEVICE_DT_GET(DT_NODELABEL(gpiok));
+		const struct device *const gpiol = DEVICE_DT_GET(DT_NODELABEL(gpiol));
 
 		for (int i = 0; i < 8; i++) {
 			gpio_pin_configure(gpiok, i, GPIO_INPUT | GPIO_PULL_DOWN);
@@ -694,7 +715,7 @@ static int gpio_it8xxx2_init_set(const struct device *arg)
 	}
 
 	if (IS_ENABLED(CONFIG_SOC_IT8XXX2_GPIO_H7_DEFAULT_OUTPUT_LOW)) {
-		const struct device *gpioh = DEVICE_DT_GET(DT_NODELABEL(gpioh));
+		const struct device *const gpioh = DEVICE_DT_GET(DT_NODELABEL(gpioh));
 
 		gpio_pin_configure(gpioh, 7, GPIO_OUTPUT_LOW);
 	}
