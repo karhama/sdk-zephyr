@@ -2,4 +2,4 @@
 
 def pipeline = new ncs.sdk_zephyr.Main()
 
-pipeline.run(JOB_NAME)
+pipeline.run(JOB_NAME) 
