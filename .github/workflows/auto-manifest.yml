@@ -1,0 +1,26 @@
+name: Create manifest PR
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - closed
+    branches:
+      - main
+
+
+jobs:
+  call:
+    runs-on: ubuntu-latest
+      - name: print debug
+        run: |
+          echo "GitHub Event - Pull Request: ${{ toJson(github.event.pull_request) }}"
+          
+      - name: Call manifest-pr workflow
+        uses: karhama/sdk-nrf/.github/workflows/create-manifest-PR.yml@main
+        with:
+          repo-path: ${{ github.repository }}
+          PR-number: ${{ github.event.pull_request.number }}
+          trigger: 'opened'
+
+
